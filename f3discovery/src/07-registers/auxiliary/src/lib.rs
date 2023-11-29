@@ -13,11 +13,11 @@ pub use stm32f3_discovery::stm32f3xx_hal::pac::GPIOE;
 pub use stm32f3_discovery::{leds::Leds, stm32f3xx_hal};
 
 use stm32f3xx_hal::prelude::*;
-pub use stm32f3xx_hal::stm32;
+pub use stm32f3xx_hal::pac;
 
 #[inline(never)]
 pub fn init() -> (ITM, &'static RegisterBlock) {
-    let device_periphs = stm32::Peripherals::take().unwrap();
+    let device_periphs = pac::Peripherals::take().unwrap();
     let mut reset_and_clock_control = device_periphs.RCC.constrain();
 
     // initialize user leds

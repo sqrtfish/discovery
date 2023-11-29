@@ -2,8 +2,11 @@
 #![no_std]
 
 use cortex_m_rt::entry;
-use rtt_target::rtt_init_print;
+use rtt_target::{rtt_init_print, rprintln};
 use panic_rtt_target as _;
+
+use core::fmt::Write;
+use heapless::Vec;
 
 #[cfg(feature = "v1")]
 use microbit::{
@@ -50,8 +53,54 @@ fn main() -> ! {
         UartePort::new(serial)
     };
 
-    nb::block!(serial.write(b'X')).unwrap();
-    nb::block!(serial.flush()).unwrap();
+    // nb::block!(serial.write(b'X')).unwrap();
+    
+    // for byte in b"The quick brown fox jumps over the lazy dog.\r\n".iter() {
+    //     nb::block!(serial.write(*byte)).unwrap();
+    // }
 
-    loop {}
+    //write!(serial, "The quick brown fox jumps over the lazy dog.\r\n").unwrap();
+
+    //nb::block!(serial.flush()).unwrap();
+
+    // A buffer with 32 bytes of capacity
+    let mut buffer: Vec<u8, 32> = Vec::new();
+
+    loop {
+        // let byte = nb::block!(serial.read()).unwrap();
+        // rprintln!("{}", byte as char);
+        // nb::block!(serial.write(byte)).unwrap();
+        // nb::block!(serial.flush()).unwrap();
+
+        buffer.clear();
+
+        write!(serial, "Input the string, then enter:\r\n").unwrap();
+        nb::block!(serial.flush()).unwrap();
+
+        loop {
+
+            // We assume that the receiving cannot fail
+            let byte = nb::block!(serial.read()).unwrap();
+            rprintln!("{}", byte as char);
+            // rprintln!("{}", b'\n');
+            nb::block!(serial.write(byte)).unwrap();
+            nb::block!(serial.flush()).unwrap();
+            // \r = 13, \n = 10
+            if buffer.push(byte).is_err() {
+                write!(serial, "error: buffer full\r\n").unwrap();
+                break;
+            }
+
+            if byte == 13 {
+                //nb::block!(serial.write(b'\n')).unwrap();
+                write!(serial, "\nThe revers one is:\r\n").unwrap();
+                nb::block!(serial.flush()).unwrap();
+                for byte in buffer.iter().rev().chain(&[b'\n', b'\r']) {
+                    nb::block!(serial.write(*byte)).unwrap();
+                }
+                break;
+            }
+        }
+        nb::block!(serial.flush()).unwrap()
+    }
 }
