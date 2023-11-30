@@ -6,7 +6,7 @@ use cortex_m_rt::entry;
 use rtt_target::{rtt_init_print, rprintln};
 use panic_rtt_target as _;
 
-use microbit::hal::prelude::*;
+// use microbit::hal::prelude::*;
 
 #[cfg(feature = "v1")]
 use microbit::{
@@ -19,6 +19,12 @@ use microbit::{
     hal::twim,
     pac::twim0::frequency::FREQUENCY_A,
 };
+
+use lsm303agr::{
+    AccelMode, AccelOutputDataRate, Lsm303agr
+};
+use microbit::hal::delay::Delay;
+
 
 const ACCELEROMETER_ADDR: u8 = 0b0011001;
 const MAGNETOMETER_ADDR: u8 = 0b0011110;
@@ -38,15 +44,32 @@ fn main() -> ! {
     #[cfg(feature = "v2")]
     let mut i2c = { twim::Twim::new(board.TWIM0, board.i2c_internal.into(), FREQUENCY_A::K100) };
 
-    let mut acc = [0];
-    let mut mag = [0];
+    // let mut acc = [0];
+    // let mut mag = [0];
 
-    // First write the address + register onto the bus, then read the chip's responses
-    i2c.write_read(ACCELEROMETER_ADDR, &[ACCELEROMETER_ID_REG], &mut acc).unwrap();
-    i2c.write_read(MAGNETOMETER_ADDR, &[MAGNETOMETER_ID_REG], &mut mag).unwrap();
+    // // First write the address + register onto the bus, then read the chip's responses
+    // i2c.write_read(ACCELEROMETER_ADDR, &[ACCELEROMETER_ID_REG], &mut acc).unwrap();
+    // i2c.write_read(MAGNETOMETER_ADDR, &[MAGNETOMETER_ID_REG], &mut mag).unwrap();
 
-    rprintln!("The accelerometer chip's id is: {:#b}", acc[0]);
-    rprintln!("The magnetometer chip's id is: {:#b}", mag[0]);
+    // rprintln!("The accelerometer chip's id is: {:#b}", acc[0]);
+    // rprintln!("The magnetometer chip's id is: {:#b}", mag[0]);
 
-    loop {}
+    // Code from crate lsm303agr
+
+    let mut delay = Delay::new(board.SYST);
+    let mut sensor = Lsm303agr::new_with_i2c(i2c);
+    sensor.init().unwrap();
+    sensor.set_accel_mode_and_odr(&mut delay, AccelMode::Normal, AccelOutputDataRate::Hz50).unwrap();
+
+    loop {
+        if sensor.accel_status().unwrap().xyz_new_data() {
+            let data = sensor.acceleration().unwrap();
+            // RTT instead of normal print
+            rprintln!("Acceleration: x {} y {} z {}", data.x_mg(), data.y_mg(), data.z_mg());
+        }
+
+        for _ in 0..200_000 {
+            cortex_m::asm::nop();
+        }
+    }
 }
