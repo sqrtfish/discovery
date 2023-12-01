@@ -31,7 +31,7 @@ use lsm303agr::{
 
 use microbit::hal::delay::Delay;
 
-use nb::block;
+use nb;
 use core::fmt::Write;
 
 #[cfg(feature = "v1")]
@@ -52,6 +52,10 @@ use microbit::{
 mod serial_setup;
 #[cfg(feature = "v2")]
 use serial_setup::UartePort;
+
+mod led;
+use led::Direction;
+use crate::led::direction_to_led;
 
 #[entry]
 fn main() -> ! {
@@ -110,5 +114,18 @@ fn main() -> ! {
         //rprintln!("x: {}, y: {}, z: {}", data.x, data.y, data.z);
         write!(serial, "x: {}, y: {}, z: {}\r\n", data.x, data.y, data.z).unwrap();
         nb::block!(serial.flush()).unwrap();
+
+        let dir = match (data.x > 0, data.y > 0) {
+            //
+            (true, true) => Direction::East,
+            //
+            (false, true) => Direction::North,
+            //
+            (false, false) => Direction::West,
+            //
+            (true, false) => Direction::South,
+        };
+
+        display.show(&mut timer, direction_to_led(dir), 1000);
     }
 }
