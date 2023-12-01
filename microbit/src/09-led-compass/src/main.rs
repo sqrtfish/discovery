@@ -1,10 +1,11 @@
-#![deny(unsafe_code)]
+// #![deny(unsafe_code)]
 #![no_main]
 #![no_std]
 
 use cortex_m_rt::entry;
 use panic_rtt_target as _;
-use rtt_target::{rprintln, rtt_init_print};
+//use rtt_target::{rprintln, rtt_init_print};
+use rtt_target::rtt_init_print;
 
 mod calibration;
 use crate::calibration::calc_calibration;
@@ -30,6 +31,28 @@ use lsm303agr::{
 
 use microbit::hal::delay::Delay;
 
+use nb::block;
+use core::fmt::Write;
+
+#[cfg(feature = "v1")]
+use microbit::{
+    hal::prelude::*,
+    hal::uart,
+    hal::uart::{Baudrate, Parity},
+};
+
+#[cfg(feature = "v2")]
+use microbit::{
+    hal::prelude::*,
+    hal::uarte,
+    hal::uarte::{Baudrate, Parity},
+};
+
+#[cfg(feature = "v2")]
+mod serial_setup;
+#[cfg(feature = "v2")]
+use serial_setup::UartePort;
+
 #[entry]
 fn main() -> ! {
     rtt_init_print!();
@@ -41,10 +64,31 @@ fn main() -> ! {
     #[cfg(feature = "v2")]
     let i2c = { twim::Twim::new(board.TWIM0, board.i2c_internal.into(), FREQUENCY_A::K100) };
 
+    #[cfg(feature = "v1")]
+    let mut serial = {
+        uart::Uart::new(
+            board.UART0,
+            board.uart.into(),
+            Parity::EXCLUDED,
+            Baudrate::BAUD115200,
+        )
+    };
+
+    #[cfg(feature = "v2")]
+    let mut serial = {
+        let serial = uarte::Uarte::new(
+            board.UARTE0,
+            board.uart.into(),
+            Parity::EXCLUDED,
+            Baudrate::BAUD115200,
+        );
+        UartePort::new(serial)
+    };
+
     let mut timer = Timer::new(board.TIMER0);
     let mut display = Display::new(board.display_pins);
 
-    let delay = Delay::new(board.SYST);
+    let mut delay = Delay::new(board.SYST);
 
     let mut sensor = Lsm303agr::new_with_i2c(i2c);
     sensor.init().unwrap();
@@ -53,12 +97,18 @@ fn main() -> ! {
     let mut sensor = sensor.into_mag_continuous().ok().unwrap();
 
     let calibration = calc_calibration(&mut sensor, &mut display, &mut timer);
-    rprintln!("Calibration: {:?}", calibration);
-    rprintln!("Calibration done, entering busy loop");
+    // rprintln!("Calibration: {:?}", calibration);
+    // rprintln!("Calibration done, entering busy loop");
+    
+    write!(serial, "Calibration: {:?}\r\n", calibration).unwrap();
+    write!(serial,"Calibration done, entering busy loop.\r\n").unwrap();
+
     loop {
-        while !sensor.mag_status().unwrap().xyz_new_data {}
+        while !sensor.mag_status().unwrap().xyz_new_data() {}
         let mut data = convert_tuple_to_measurement(sensor.magnetic_field().unwrap().xyz_nt());
         data = calibrated_measurement(data, &calibration);
-        rprintln!("x: {}, y: {}, z: {}", data.x, data.y, data.z);
+        //rprintln!("x: {}, y: {}, z: {}", data.x, data.y, data.z);
+        write!(serial, "x: {}, y: {}, z: {}\r\n", data.x, data.y, data.z).unwrap();
+        nb::block!(serial.flush()).unwrap();
     }
 }

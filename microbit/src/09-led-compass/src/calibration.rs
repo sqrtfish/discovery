@@ -16,8 +16,7 @@ const PIXEL1_THRESHOLD: i32 = 200;
 const PIXEL2_THRESHOLD: i32 = 600;
 const CALIBRATION_INCREMENT: i32 = 200;
 
-#[derive(Debug)]
-
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Measurement {
     pub x: i32,
     pub y: i32,
@@ -27,7 +26,7 @@ pub struct Measurement {
 pub fn convert_tuple_to_measurement(tuple: (i32, i32, i32)) -> Measurement {
     Measurement { x: tuple.0, y: tuple.1, z: tuple.2 }
 }
-
+#[derive(Debug)]
 pub struct Calibration {
     center: Measurement,
     scale: Measurement,
@@ -84,7 +83,7 @@ where
     let mut samples = 0;
 
     while samples < PERIMETER_POINTS {
-        while !sensor.accel_status().unwrap().xyz_new_data {}
+        while !sensor.accel_status().unwrap().xyz_new_data() {}
         let accel_data = sensor.acceleration().unwrap();
         let x = accel_data.x_mg();
         let y = accel_data.y_mg();
@@ -117,7 +116,7 @@ where
 
         if leds[cursor.0][cursor.1] != 1 {
             leds[cursor.0][cursor.1] = 1;
-            while !sensor.mag_status().unwrap().xyz_new_data {}
+            while !sensor.mag_status().unwrap().xyz_new_data() {}
             let mag_data = convert_tuple_to_measurement(sensor.magnetic_field().unwrap().xyz_nt());
             // let mag_data: Measurement = Measurement {x: mag_data.0, y :mag_data.1, z: mag_data.2};
             let mag_data = measurement_to_enu(mag_data);
