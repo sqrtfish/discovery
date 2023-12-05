@@ -116,16 +116,16 @@ fn main() -> ! {
         nb::block!(serial.flush()).unwrap();
 
         let dir = match (data.x > 0, data.y > 0) {
-            //
-            (true, true) => Direction::East,
-            //
-            (false, true) => Direction::North,
-            //
-            (false, false) => Direction::West,
-            //
-            (true, false) => Direction::South,
+            // Quadrant I
+            (true, true) => Direction::NorthEast,
+            // Quadrant II
+            (false, true) => Direction::NorthWest,
+            // Quadrant III
+            (false, false) => Direction::SouthWest,
+            // Quadrant IV
+            (true, false) => Direction::SouthEast,
         };
 
-        display.show(&mut timer, direction_to_led(dir), 1000);
+        display.show(&mut timer, direction_to_led(dir), 100);
     }
 }
