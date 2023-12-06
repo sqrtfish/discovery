@@ -34,7 +34,10 @@ use microbit::hal::delay::Delay;
 use nb;
 use core::fmt::Write;
 use core::f32::consts::PI;
-use libm::atan2f;
+use libm::{
+    atan2f,
+    sqrtf
+};
 
 #[cfg(feature = "v1")]
 use microbit::{
@@ -153,8 +156,13 @@ fn main() -> ! {
         };
         
         display.show(&mut timer, direction_to_led(dir), 100);
-
         write!(serial, "x: {}, y: {}, z: {}, theta: {}\r\n", data.x, data.y, data.z, theta).unwrap();
+
+        let x = data.x as f32;
+        let y = data.y as f32;
+        let z = data.z as f32;
+        let magnitude = sqrtf(x * x + y * y + z * z);
+        write!(serial, "{} nT, {} mT\r\n", magnitude, magnitude / 100.0).unwrap();
         nb::block!(serial.flush()).unwrap();
     }
 }
