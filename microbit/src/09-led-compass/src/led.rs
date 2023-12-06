@@ -8,6 +8,7 @@ pub enum Direction{
     SouthWest,
     West,
     NorthWest,
+    Empty,
 }
 
 const NORTH: [[u8; 5]; 5] = [
@@ -74,6 +75,14 @@ const NORTH_WEST: [[u8; 5]; 5] = [
     [1, 0, 0, 0, 0],   
 ];
 
+const EMPTY : [[u8; 5]; 5] = [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+];
+
 pub fn direction_to_led(direction: Direction) -> [[u8; 5]; 5] {
     match direction {
         Direction::North => NORTH,
@@ -84,5 +93,6 @@ pub fn direction_to_led(direction: Direction) -> [[u8; 5]; 5] {
         Direction::SouthWest => SOUTH_WEST,
         Direction::West => WEST,
         Direction::NorthWest => NORTH_WEST,
+        Direction::Empty => EMPTY,
     }
 }

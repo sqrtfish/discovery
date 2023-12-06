@@ -20,7 +20,7 @@ rtt-target = "0.4.0"
 # rtt-target = { version = "0.4.0", features = ["cortex-m"] }
 panic-rtt-target = { version = "0.1.2", features = ["cortex-m"] }
 lsm303agr = "0.3.0"
-libm = "0.2.7"
+libm = "0.2.8"
 embedded-hal = "0.2.7"
 nb = "1.1.0"
 

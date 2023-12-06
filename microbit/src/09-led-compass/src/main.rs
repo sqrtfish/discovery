@@ -33,6 +33,8 @@ use microbit::hal::delay::Delay;
 
 use nb;
 use core::fmt::Write;
+use core::f32::consts::PI;
+use libm::atan2f;
 
 #[cfg(feature = "v1")]
 use microbit::{
@@ -112,9 +114,8 @@ fn main() -> ! {
         let mut data = convert_tuple_to_measurement(sensor.magnetic_field().unwrap().xyz_nt());
         data = calibrated_measurement(data, &calibration);
         //rprintln!("x: {}, y: {}, z: {}", data.x, data.y, data.z);
-        write!(serial, "x: {}, y: {}, z: {}\r\n", data.x, data.y, data.z).unwrap();
-        nb::block!(serial.flush()).unwrap();
 
+        /* solution 1
         let dir = match (data.x > 0, data.y > 0) {
             // Quadrant I
             (true, true) => Direction::NorthEast,
@@ -124,8 +125,36 @@ fn main() -> ! {
             (false, false) => Direction::SouthWest,
             // Quadrant IV
             (true, false) => Direction::SouthEast,
-        };
+        };// */
 
+        // use libm's atan2f since this isn't in core yet
+        let theta = atan2f(data.y as f32, data.x as f32);
+        let theta = theta * 180.0 / PI;
+
+        // figure out the direction base on theta
+        let dir = if theta > 44.0 && theta < 46.0 {
+            Direction::NorthEast
+        } else if theta > 89.0 && theta < 91.0 {
+            Direction::North
+        } else if theta > 134.0 && theta < 136.0 {
+            Direction::NorthWest
+        } else if theta > 179.0 || theta < -179.0 {
+            Direction::West
+        } else if theta > -136.0 && theta < -134.0 {
+            Direction::SouthWest
+        } else if theta > -91.0 && theta < -89.0 {
+            Direction::South
+        } else if theta > -46.0 && theta < -44.0 {
+            Direction::SouthEast
+        } else if theta > -1.0 && theta < 1.0 {
+            Direction::East
+        } else {
+            Direction::Empty
+        };
+        
         display.show(&mut timer, direction_to_led(dir), 100);
+
+        write!(serial, "x: {}, y: {}, z: {}, theta: {}\r\n", data.x, data.y, data.z, theta).unwrap();
+        nb::block!(serial.flush()).unwrap();
     }
 }
