@@ -13,7 +13,7 @@ use panic_rtt_target as _;
 use microbit::{
     board::Board,
     display::blocking::Display,
-    hal::{prelude::*, Timer},
+    hal::Timer,
 };
 
 const PIXELS: [(usize, usize); 16] = [
