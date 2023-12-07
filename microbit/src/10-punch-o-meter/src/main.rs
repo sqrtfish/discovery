@@ -7,19 +7,25 @@ use rtt_target::{rprintln, rtt_init_print,};
 use panic_rtt_target as _;
 
 use microbit::{
-    hal::twim,
+    hal::{twim, timer},
     hal::delay::Delay,
-    pac::twim0::frequency::FREQUENCY_A,
+    hal::prelude::*,
+    pac::{twim0::frequency::FREQUENCY_A, timer0},
 };
 
 use lsm303agr::{
     AccelMode,
     AccelOutputDataRate,
+    AccelScale,
     Lsm303agr,
 };
 
+use nb::Error;
+
+
 #[entry]
 fn main() -> ! {
+    const ACCEL_THD: i32 = 500;
     rtt_init_print!();
     let board = microbit::Board::take().unwrap();
     let i2c = { 
@@ -39,14 +45,33 @@ fn main() -> ! {
         AccelOutputDataRate::Hz10
     ).unwrap();
 
+    // let accel_as = AccelScale::G4;
+    let mut timer = timer::Timer::new(board.TIMER0).into_periodic();
+
+    sensor.set_accel_scale(AccelScale::G16).unwrap();
     loop {
-        while !sensor.accel_status().unwrap().xyz_new_data() {};
-        let data = sensor.acceleration().unwrap();
-        rprintln!(
-            "Acceleration : x { } y { } z { }",
-            data.x_mg(),
-            data.y_mg(),
-            data.z_mg()
-        );
+        while !sensor.accel_status().unwrap().x_new_data() {}
+        let data = sensor.acceleration().unwrap().x_mg();
+        if data.abs() > ACCEL_THD {
+            break;
+        }
+    }
+    rprintln!("Start!");
+//    rprintln!("current is { } mg", data);
+
+    timer.start(1_000_000 as u32);
+    //let mut result = timer.wait();
+    let mut max_x: i32 = 0;
+
+    loop {
+        while !sensor.accel_status().unwrap().x_new_data() {};
+        let data = sensor.acceleration().unwrap().x_mg();
+        if data.abs() > max_x {
+            max_x = data;
+        }
+        if timer.wait() == Ok(()) {
+            rprintln!("max x accel is { } mg", max_x);
+            max_x = 0;
+        }
     }
 }
