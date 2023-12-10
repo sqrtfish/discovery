@@ -136,26 +136,29 @@ fn main() -> ! {
 
         // figure out the direction base on theta
         let dir = if theta > 44.0 && theta < 46.0 {
-            Direction::NorthEast
+            Some(Direction::NorthEast)
         } else if theta > 89.0 && theta < 91.0 {
-            Direction::North
+            Some(Direction::North)
         } else if theta > 134.0 && theta < 136.0 {
-            Direction::NorthWest
+            Some(Direction::NorthWest)
         } else if theta > 179.0 || theta < -179.0 {
-            Direction::West
+            Some(Direction::West)
         } else if theta > -136.0 && theta < -134.0 {
-            Direction::SouthWest
+            Some(Direction::SouthWest)
         } else if theta > -91.0 && theta < -89.0 {
-            Direction::South
+            Some(Direction::South)
         } else if theta > -46.0 && theta < -44.0 {
-            Direction::SouthEast
+            Some(Direction::SouthEast)
         } else if theta > -1.0 && theta < 1.0 {
-            Direction::East
+            Some(Direction::East)
         } else {
-            Direction::Empty
+            None
         };
         
-        display.show(&mut timer, direction_to_led(dir), 100);
+        match dir {
+            Some(dir) => display.show(&mut timer, direction_to_led(dir), 100),
+            None => (),
+        }
         write!(serial, "x: {}, y: {}, z: {}, theta: {}\r\n", data.x, data.y, data.z, theta).unwrap();
 
         let x = data.x as f32;
