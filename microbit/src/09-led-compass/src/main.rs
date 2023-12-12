@@ -155,6 +155,8 @@ fn main() -> ! {
             None
         };
         
+        // can change to use if let
+        // if let Some(dir) = dir { display.show(&mut timer, direction_to_led(dir), 100);}
         match dir {
             Some(dir) => display.show(&mut timer, direction_to_led(dir), 100),
             None => (),
