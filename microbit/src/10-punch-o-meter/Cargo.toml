@@ -5,21 +5,24 @@ authors = ["Henrik Böving <hargonix@gmail.com>"]
 edition = "2018"
 
 [dependencies.microbit-v2]
-version = "0.12.0"
+version = "0.13.0"
 optional = true
 
 [dependencies.microbit]
-version = "0.12.0"
+version = "0.13.0"
 optional = true
 
 [dependencies]
-cortex-m = "0.7.3"
-cortex-m-rt = "0.7.0"
-rtt-target = { version = "0.3.1", features = ["cortex-m"] }
+cortex-m = { version = "0.7.7", features = ["critical-section-single-core"]}
+cortex-m-rt = "0.7.3"
+rtt-target = "0.4.0"
+# rtt-target = { version = "0.4.0", features = ["cortex-m"] }
 panic-rtt-target = { version = "0.1.2", features = ["cortex-m"] }
-lsm303agr = "0.2.2"
-nb = "1.0.0"
+lsm303agr = "0.3.0"
+nb = "1.1.0"
+embedded-hal = "0.2.7"
 
 [features]
+default = ["v2"]
 v2 = ["microbit-v2"]
 v1 = ["microbit"]

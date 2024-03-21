@@ -12,7 +12,7 @@ pub use stm32f3_discovery::switch_hal;
 
 use stm32f3_discovery::{
     leds::Leds,
-    stm32f3xx_hal::{prelude::*, stm32},
+    stm32f3xx_hal::{prelude::*, pac},
 };
 
 pub fn init() -> (
@@ -20,7 +20,7 @@ pub fn init() -> (
     &'static rcc::RegisterBlock,
     &'static tim6::RegisterBlock,
 ) {
-    let p = stm32::Peripherals::take().unwrap();
+    let p = pac::Peripherals::take().unwrap();
 
     let mut rcc = p.RCC.constrain();
 

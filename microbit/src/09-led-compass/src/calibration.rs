@@ -7,7 +7,8 @@ use libm::{fabsf, sqrtf};
 use lsm303agr::interface::I2cInterface;
 use lsm303agr::mode::MagContinuous;
 use lsm303agr::Lsm303agr;
-use lsm303agr::Measurement;
+// use lsm303agr::Measurement;
+// use lsm303agr::MagneticField;
 use microbit::display::blocking::Display;
 
 const PERIMETER_POINTS: usize = 25;
@@ -15,6 +16,16 @@ const PIXEL1_THRESHOLD: i32 = 200;
 const PIXEL2_THRESHOLD: i32 = 600;
 const CALIBRATION_INCREMENT: i32 = 200;
 
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub struct Measurement {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+}
+
+pub fn convert_tuple_to_measurement(tuple: (i32, i32, i32)) -> Measurement {
+    Measurement { x: tuple.0, y: tuple.1, z: tuple.2 }
+}
 #[derive(Debug)]
 pub struct Calibration {
     center: Measurement,
@@ -72,10 +83,10 @@ where
     let mut samples = 0;
 
     while samples < PERIMETER_POINTS {
-        while !sensor.accel_status().unwrap().xyz_new_data {}
-        let accel_data = sensor.accel_data().unwrap();
-        let x = accel_data.x;
-        let y = accel_data.y;
+        while !sensor.accel_status().unwrap().xyz_new_data() {}
+        let accel_data = sensor.acceleration().unwrap();
+        let x = accel_data.x_mg();
+        let y = accel_data.y_mg();
         if x < -PIXEL2_THRESHOLD {
             cursor.1 = 0;
         } else if x < -PIXEL1_THRESHOLD {
@@ -105,8 +116,10 @@ where
 
         if leds[cursor.0][cursor.1] != 1 {
             leds[cursor.0][cursor.1] = 1;
-            while !sensor.mag_status().unwrap().xyz_new_data {}
-            let mag_data = measurement_to_enu(sensor.mag_data().unwrap());
+            while !sensor.mag_status().unwrap().xyz_new_data() {}
+            let mag_data = convert_tuple_to_measurement(sensor.magnetic_field().unwrap().xyz_nt());
+            // let mag_data: Measurement = Measurement {x: mag_data.0, y :mag_data.1, z: mag_data.2};
+            let mag_data = measurement_to_enu(mag_data);
             data[samples] = mag_data;
             samples += 1;
         }
