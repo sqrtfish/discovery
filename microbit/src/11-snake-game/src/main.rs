@@ -8,11 +8,12 @@ mod display;
 use cortex_m_rt::entry;
 use microbit::{
     Board,
-    hal::{prelude::*, Rng, Timer},
+    hal::{Rng, Timer},
     display::nonblocking::{BitImage, GreyscaleImage}
 };
 use rtt_target::rtt_init_print;
 use panic_rtt_target as _;
+use embedded_hal::delay::DelayNs;
 
 use crate::control::{get_turn, init_buttons};
 use crate::display::{clear_display, display_image, init_display};
