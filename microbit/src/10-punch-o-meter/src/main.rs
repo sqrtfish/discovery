@@ -9,7 +9,7 @@ use panic_rtt_target as _;
 use microbit::{
     hal::{twim, timer::Timer},
     hal::delay::Delay,
-    hal::prelude::*,
+    // hal::prelude::*,
     pac::twim0::frequency::FREQUENCY_A,
 };
 
@@ -19,6 +19,8 @@ use lsm303agr::{
     AccelScale,
     Lsm303agr,
 };
+
+use embedded_hal::timer::CountDown;
 
 //use nb::Error;
 
@@ -46,9 +48,10 @@ fn main() -> ! {
     ).unwrap();
     sensor.set_accel_scale(AccelScale::G16).unwrap();
 
+    // let mut timer = Timer::new(board.TIMER0).into_periodic();
     let mut timer = Timer::new(board.TIMER0).into_periodic();
 
-    let mut max_x: i32 = 0;
+    let mut max_x: i32;
 
     loop {
         while !sensor.accel_status().unwrap().x_new_data() {}
