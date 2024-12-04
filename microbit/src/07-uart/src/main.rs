@@ -17,7 +17,7 @@ use microbit::{
 
 #[cfg(feature = "v2")]
 use microbit::{
-    // hal::prelude::*,
+    hal::prelude::*,
     hal::uarte,
     hal::uarte::{Baudrate, Parity},
 };
