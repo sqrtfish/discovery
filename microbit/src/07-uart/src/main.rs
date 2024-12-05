@@ -17,7 +17,7 @@ use microbit::{
 
 #[cfg(feature = "v2")]
 use microbit::{
-    hal::prelude::*,
+    // hal::prelude::*,
     hal::uarte,
     hal::uarte::{Baudrate, Parity},
 };
@@ -43,7 +43,7 @@ fn main() -> ! {
     };
 
     #[cfg(feature = "v2")]
-    let mut serial = {
+     let mut serial = {
         let serial = uarte::Uarte::new(
             board.UARTE0,
             board.uart.into(),

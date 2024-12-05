@@ -2,10 +2,9 @@ use core::fmt;
 // use embedded_hal::blocking::serial as bserial;
 // use embedded_hal::serial;
 use embedded_hal_nb::serial;
-use embedded_hal_nb::serial::{Write, Read};
+use embedded_io::{Write, Read};
 // use embedded_io_async::serial as bserial;
 use microbit::hal::uarte::{Instance, Uarte, UarteRx, UarteTx};
-// use embedded_io::Error;
 use nb;
 
 static mut TX_BUF: [u8; 1] = [0; 1];
@@ -29,17 +28,17 @@ impl<T: Instance> fmt::Write for UartePort<T> {
 }
 
 impl<T: Instance> serial::ErrorType for UartePort<T> {
-    type Error = serial::ErrorKind;
+    type Error = embedded_hal_nb::serial::ErrorKind;
 }
 
 impl<T: Instance> serial::Write<u8> for UartePort<T> {
     // type Error = Error;
 
-    fn write(&mut self, b: u8) -> nb::Result<(), Self::Error> {
+    fn write(&mut self, b: u8) -> Result<(), Self::Error> {
         self.0.write(b)
     }
 
-    fn flush(&mut self) -> nb::Result<(), Self::Error> {
+    fn flush(&mut self) -> Result<(), Self::Error> {
         self.0.flush()
     }
 }
@@ -49,7 +48,7 @@ impl<T: Instance> serial::Write<u8> for UartePort<T> {
 impl<T: Instance> serial::Read<u8> for UartePort<T> {
     // type Error = Error;
 
-    fn read(&mut self) -> nb::Result<u8, Self::Error> {
+    fn read(&mut self) -> Result<u8, Self::Error> {
         self.1.read()
     }
 }
