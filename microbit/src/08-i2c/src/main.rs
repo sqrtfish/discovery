@@ -5,7 +5,7 @@
 use core::str;
 
 use cortex_m_rt::entry;
-use nb::block;
+// use nb::block;
 use rtt_target::{rtt_init_print, rprintln};
 use panic_rtt_target as _;
 
@@ -44,15 +44,15 @@ use microbit::{
 
 #[cfg(feature = "v2")]
 use microbit::{
-    hal::prelude::*,
+    // hal::prelude::*,
     hal::uarte,
     hal::uarte::{Baudrate, Parity},
 };
 
-#[cfg(feature = "v2")]
-mod serial_setup;
-#[cfg(feature = "v2")]
-use serial_setup::UartePort;
+// #[cfg(feature = "v2")]
+// mod serial_setup;
+// #[cfg(feature = "v2")]
+// use serial_setup::UartePort;
 
 // const ACCELEROMETER_ADDR: u8 = 0b0011001;
 // const MAGNETOMETER_ADDR: u8 = 0b0011110;
@@ -83,15 +83,16 @@ fn main() -> ! {
     };
 
     #[cfg(feature = "v2")]
-    let mut serial = {
-        let serial = uarte::Uarte::new(
+    // let mut serial = {
+        let mut serial = uarte::Uarte::new(
             board.UARTE0,
             board.uart.into(),
             Parity::EXCLUDED,
             Baudrate::BAUD115200,
         );
-        UartePort::new(serial)
-    };
+    //     UartePort::new(serial)
+    // };
+    let mut rx_buff: [u8; 1] = [0; 1];
 
     // let mut acc = [0];
     // let mut mag = [0];
@@ -113,15 +114,21 @@ fn main() -> ! {
     let mut sensor = sensor.into_mag_continuous().ok().unwrap();
 
     write!(serial, "CMDs: acc==Acceleration; mag==Magnetometer\r\nPlease input your cmd:").unwrap();
-    nb::block!(serial.flush()).unwrap();
+    // nb::block!(serial.flush()).unwrap();
 
     loop {
         let mut buffer: Vec<u8, 32> = Vec::new();
 
         loop {
-            let byte = block!(serial.read()).unwrap();
+            // let byte = block!(serial.read()).unwrap();
+            serial.read(&mut rx_buff).unwrap();
+
+            let byte = rx_buff[0];
+            // rprintln!("{}", byte as char);
+            // serial.write(&mut rx_buff).unwrap();
 
             if byte == 13 {
+                // serial.write(&[b'\n']).unwrap();
                 break;
             }
 
