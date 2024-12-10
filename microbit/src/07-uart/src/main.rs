@@ -103,6 +103,7 @@ fn main() -> ! {
                 // for byte in buffer.iter().rev().chain(&[b'\n', b'\r']) {
                 //     nb::block!(serial.write(byte)).unwrap();
                 // }
+                buffer = buffer.iter().rev().chain(&[b'\n', b'\r']).map(|&x| x).collect();
                 serial.write(&buffer);
                 break;
             }
