@@ -15,7 +15,7 @@ optional = true
 [dependencies]
 #cortex-m = "0.7.7"
 cortex-m = {version = "0.7.7", features = ["critical-section-single-core"]}
-cortex-m-rt = "0.7.4"
+cortex-m-rt = "0.7.5"
 rtt-target = "0.6.1"
 # rtt-target = { version = "0.4.0", features = ["cortex-m"] }
 # panic-rtt-target = { version = "0.1.2", features = ["cortex-m"] }
@@ -23,7 +23,7 @@ panic-rtt-target = "0.2.0"
 lsm303agr = "1.1.0"
 libm = "0.2.11"
 embedded-hal = "1.0.0"
-nb = "1.1.0"
+# nb = "1.1.0"
 
 [features]
 default = ["v2"]

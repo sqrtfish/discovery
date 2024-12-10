@@ -31,7 +31,7 @@ use lsm303agr::{
 
 use microbit::hal::delay::Delay;
 
-use nb;
+// use nb;
 use core::fmt::Write;
 use core::f32::consts::PI;
 use libm::{
@@ -48,15 +48,15 @@ use microbit::{
 
 #[cfg(feature = "v2")]
 use microbit::{
-    hal::prelude::*,
+    // hal::prelude::*,
     hal::uarte,
     hal::uarte::{Baudrate, Parity},
 };
 
-#[cfg(feature = "v2")]
-mod serial_setup;
-#[cfg(feature = "v2")]
-use serial_setup::UartePort;
+// #[cfg(feature = "v2")]
+// mod serial_setup;
+// #[cfg(feature = "v2")]
+// use serial_setup::UartePort;
 
 mod led;
 use led::Direction;
@@ -84,15 +84,16 @@ fn main() -> ! {
     };
 
     #[cfg(feature = "v2")]
-    let mut serial = {
-        let serial = uarte::Uarte::new(
+    // let mut serial = {
+        let mut serial = uarte::Uarte::new(
             board.UARTE0,
             board.uart.into(),
             Parity::EXCLUDED,
             Baudrate::BAUD115200,
         );
-        UartePort::new(serial)
-    };
+    //     UartePort::new(serial)
+    // };
+    // let mut rx_buff: [u8; 1] = [0; 1];
 
     let mut timer = Timer::new(board.TIMER0);
     let mut display = Display::new(board.display_pins);
@@ -168,6 +169,6 @@ fn main() -> ! {
         let z = data.z as f32;
         let magnitude = sqrtf(x * x + y * y + z * z);
         write!(serial, "{} nT, {} mT\r\n", magnitude, magnitude / 100.0).unwrap();
-        nb::block!(serial.flush()).unwrap();
+        // nb::block!(serial.flush()).unwrap();
     }
 }

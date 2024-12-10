@@ -1,8 +1,10 @@
 //! Translated from <https://github.com/lancaster-university/codal-microbit-v2/blob/006abf5566774fbcf674c0c7df27e8a9d20013de/source/MicroBitCompassCalibrator.cpp>
 
 use core::fmt::Debug;
-use embedded_hal::blocking::delay::DelayUs;
-use embedded_hal::blocking::i2c::{Write, WriteRead};
+// use embedded_hal::blocking::delay::DelayUs;
+// use embedded_hal::blocking::i2c::{Write, WriteRead};
+use embedded_hal::delay::DelayNs;
+use embedded_hal::i2c::I2c;
 use libm::{fabsf, sqrtf};
 use lsm303agr::interface::I2cInterface;
 use lsm303agr::mode::MagContinuous;
@@ -53,8 +55,8 @@ pub fn calc_calibration<I, T, E>(
     timer: &mut T,
 ) -> Calibration
 where
-    T: DelayUs<u32>,
-    I: Write<Error = E> + WriteRead<Error = E>,
+    T: DelayNs,
+    I: I2c<Error = E>,
     E: Debug,
 {
     let data = get_data(sensor, display, timer);
@@ -67,8 +69,8 @@ fn get_data<I, T, E>(
     timer: &mut T,
 ) -> [Measurement; 25]
 where
-    T: DelayUs<u32>,
-    I: Write<Error = E> + WriteRead<Error = E>,
+    T: DelayNs,
+    I: I2c<Error = E>,
     E: Debug,
 {
     let mut leds = [
