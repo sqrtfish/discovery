@@ -3,17 +3,8 @@ name = "robot"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies.microbit-v2]
-version = "0.15.1"
-optional = true
-
-# NOTE: We define a dependency for v1 here so that CI checks pass, and to facilitate future porting of the snake game
-# to the micro:bit v1. However, the code has not been written for, or tested on, the v1 and may not work.
-[dependencies.microbit]
-version = "0.15.1"
-optional = true
-
 [dependencies]
+microbit-v2 = { version = "0.15.1", features = ["embedded-hal-02"]}
 # cortex-m = "0.7.7"
 cortex-m = { version = "0.7.7", features = ["critical-section-single-core"]}
 cortex-m-rt = "0.7.5"
@@ -21,15 +12,11 @@ cortex-m-rt = "0.7.5"
 rtt-target = "0.6.1"
 # panic-rtt-target = { version = "0.1.2", features = ["cortex-m"] }
 panic-rtt-target = "0.2.0"
-lsm303agr = "1.0.0"
+lsm303agr = "1.1.0"
 nb = "1.1.0"
 libm = "0.2.11"
 heapless = "0.8.0"
 tiny-led-matrix = "1.0.2"
 embedded-hal = "1.0.0"
 pwm-pca9685 = "1.0.0"
-
-[features]
-default = ["v2"]
-v2 = ["microbit-v2"]
-v1 = ["microbit"]
+panic-halt = "1.0.0"
