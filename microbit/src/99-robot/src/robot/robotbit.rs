@@ -2,16 +2,14 @@ use core::fmt::Debug;
 use embedded_hal::i2c::I2c;
 use embedded_hal::delay::DelayNs;
 use nb::Error;
-use rtt_target::rprintln;
+// use rtt_target::rprintln;
 
-use crate::robot::pca9685::PRESCALE;
-
-use super::tm1650;
+use crate::robot::tm1650;
 // use crate::pca9685;
 
-use super::pca9685::{
+use crate::robot::pca9685::{
     Servos, Motors, 
-    LED0_ON_L, MODE1, PCA9685_ADDRESS, 
+    LED0_ON_L, MODE1, PCA9685_ADDRESS, PRESCALE,
     STP_CHA_H, STP_CHA_L, STP_CHB_H, 
     STP_CHB_L, STP_CHC_H, STP_CHC_L, 
     STP_CHD_H, STP_CHD_L};
@@ -118,22 +116,22 @@ where
         prescalerval /= 4096.0;
         prescalerval /= freq;
         prescalerval -= 1.0;
-        rprintln!("prescalerval = {:?}", prescalerval);
+        // rprintln!("prescalerval = {:?}", prescalerval);
         let mut oldmode:[u8;1] = [0];
         while !self.i2c.write_read(PCA9685_ADDRESS, 
             &[MODE1], 
             &mut oldmode[0..1]).is_ok() {};
         // self.timer.delay_ms(1);
-        rprintln!("oldmode = {:?}", oldmode);
+        // rprintln!("oldmode = {:?}", oldmode);
         let newmode = (oldmode[0] & 0x7F) | 0x10;
-        rprintln!("newmode = {:?}", newmode);
-        rprintln!("oldmode = {:?}", oldmode);
+        // rprintln!("newmode = {:?}", newmode);
+        // rprintln!("oldmode = {:?}", oldmode);
         while !self.i2c.write(PCA9685_ADDRESS, &[MODE1, newmode]).is_ok() {};
         // self.timer.delay_ms(1);
         while !self.i2c.write(PCA9685_ADDRESS, &[PRESCALE, prescalerval as u8]).is_ok() {};
         // self.timer.delay_ms(1);
         while !self.i2c.write(PCA9685_ADDRESS, &[MODE1, oldmode[0]]).is_ok() {};
-        rprintln!("oldmode = {:?}", oldmode);
+        // rprintln!("oldmode = {:?}", oldmode);
         self.timer.delay_ms(5000);
         while !self.i2c.write(PCA9685_ADDRESS, &[MODE1, oldmode[0] | 0xA1]).is_ok() {};
         // self.timer.delay_ms(1);
@@ -152,7 +150,7 @@ where
             (off & 0xFF) as u8,
             ((off >> 8) & 0xFF) as u8
         ];
-        rprintln!("buf = {:?}", buf);
+        // rprintln!("buf = {:?}", buf);
 
         while !self.i2c.write(PCA9685_ADDRESS, &buf).is_ok() {};
         // self.timer.delay_ms(1);
@@ -202,6 +200,12 @@ where
 
     fn set_servo(&mut self, servo: Servos, degree: f32) {
         let v_us = degree * 10.0 + 600.0;
+        let value = (v_us * 4096.0 / 20000.0) as u16;
+        self.set_pwm(servo as u8 + 7, 0, value);
+    }
+    
+    fn set_geek_servo(&mut self, servo: Servos, degree: f32) {
+        let v_us = (degree - 90.0) * 20.0 / 3.0 + 1500.0;
         let value = (v_us * 4096.0 / 20000.0) as u16;
         self.set_pwm(servo as u8 + 7, 0, value);
     }
