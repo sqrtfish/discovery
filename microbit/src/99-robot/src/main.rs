@@ -64,11 +64,13 @@ fn main() -> ! {
 
     let delay = Delay::new(board.SYST);
 
+    let echo = board.edge.e00.into_floating_input();
+
     // let sensor_lsm303 = Lsm303agr::new_with_i2c(i2c);
 
     // let senser_pca9685 = pwm_pca9685::Pca9685::new(i2c_e, 0x40).unwrap();
     
-    let mut robot = robotbit::Robotbit::default(i2c_e, delay).unwrap();
+    let mut robot = robotbit::Robotbit::default(i2c_e, delay, echo).unwrap();
     
     // let mut gpiote = Gpiote::new(board.GPIOTE);
     let mut button_a = board.buttons.button_a.into_pullup_input();
@@ -85,12 +87,12 @@ fn main() -> ! {
     write!(serial, "Robot stopped\r\n").unwrap();
     // pause(&mut button_a);
     robot.delay();
-    robot.forward();
+    // robot.forward();
     // rprintln!("Robot forward");
     write!(serial, "Robot forward\r\n").unwrap();
     // pause(&mut button_a);
     robot.delay();
-    robot.backward();
+    // robot.backward();
     // rprintln!("Robot backward");
     write!(serial, "Robot backward\r\n").unwrap();
     // pause(&mut button_a);
@@ -113,7 +115,7 @@ fn main() -> ! {
     robot.init_display();
     robot.display();
     rprintln!("Robot display");
-    robot.run_fan();
+    // robot.run_fan();
     write!(serial, "Robot run fan\r\n").unwrap();
     robot.delay();
     robot.stop_fan();
@@ -126,6 +128,7 @@ fn main() -> ! {
             robot.display();
             // robot.turn_head(i as f32 * 20.0);
             robot.delay();
+            write!(serial, "echo is {}\r\n", robot.hcsr04_echo()).unwrap();
         }
         // robot.delay();
     }

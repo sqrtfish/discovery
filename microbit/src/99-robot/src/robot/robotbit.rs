@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 use embedded_hal::i2c::I2c;
 use embedded_hal::delay::DelayNs;
+use embedded_hal::digital::InputPin;
 use nb::Error;
 // use rtt_target::rprintln;
 
@@ -55,22 +56,25 @@ pub struct Seg4 {
 
 // #[derive(Debug, Default, Clone, Copy, PartialEq)]
 #[derive(Debug)]
-pub struct Robotbit<I2C, T> {
+pub struct Robotbit<I2C, T, PIN> {
     i2c: I2C,
     timer: T,
+    echo: PIN,
     motors: Motor,
     seg4: Seg4,
 }
 
-impl<I2C, T, ERROR> Robotbit<I2C, T> 
+impl<I2C, T, PIN, ERROR> Robotbit<I2C, T, PIN> 
 where 
     I2C: I2c<Error = ERROR>,
     T: DelayNs,
+    PIN: InputPin,
 {
-    pub fn default(i2c: I2C, timer: T) -> Result<Self, Error<ERROR>> {
+    pub fn default(i2c: I2C, timer: T, pin: PIN) -> Result<Self, Error<ERROR>> {
         Ok(Robotbit {
             i2c,
             timer,
+            echo: pin,
             motors: Motor { 
                 motor_speed: 150, 
                 motor_freq: 50,
@@ -80,8 +84,8 @@ where
         })
     }
 
-    pub fn destroy(self) -> (I2C, T) {
-        (self.i2c, self.timer)
+    pub fn destroy(self) -> (I2C, T, PIN) {
+        (self.i2c, self.timer, self.echo)
     }
 
     pub fn display(&mut self) {
@@ -230,6 +234,12 @@ where
             self.set_pwm(pn, 0, speed as u16);
         }
     }
+    
+    fn set_hcsr04(&mut self) {
+        self.set_level(Servos::S3, false);
+        self.set_level(Servos::S3, true);
+        self.set_level(Servos::S3, false);
+    }
 
     fn run_two_motors (&mut self, 
         motor1: Motors, speed1: i16, 
@@ -322,5 +332,21 @@ where
         for i in 0..4 {
             self.seg4.dbuf[i] = dbuf[i];
         }
+    }
+
+    pub fn hcsr04_echo(&mut self) -> u32{
+        let mut cnt = 0;
+        self.set_hcsr04();
+        while self.echo.is_low().unwrap() {
+            if cnt > 2000000 {
+                return cnt;
+            }
+            cnt += 1;
+        } 
+        cnt = 0;
+        while self.echo.is_high().unwrap() {
+            cnt += 1;
+        }
+        cnt
     }
 }
