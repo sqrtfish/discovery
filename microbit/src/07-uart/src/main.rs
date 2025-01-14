@@ -2,11 +2,8 @@
 #![no_std]
 
 use cortex_m_rt::entry;
-use rtt_target::{rtt_init_print, rprintln};
 use panic_rtt_target as _;
-
-use core::fmt::Write;
-use heapless::Vec;
+use rtt_target::rtt_init_print;
 
 #[cfg(feature = "v1")]
 use microbit::{
@@ -17,15 +14,21 @@ use microbit::{
 
 #[cfg(feature = "v2")]
 use microbit::{
-    // hal::prelude::*,
+    hal::prelude::*,
     hal::uarte,
     hal::uarte::{Baudrate, Parity},
 };
 
-// #[cfg(feature = "v2")]
-// mod serial_setup;
-// #[cfg(feature = "v2")]
-// use serial_setup::UartePort;
+#[cfg(feature = "v1")]
+use embedded_io::Write;
+
+#[cfg(feature = "v2")]
+use embedded_hal_nb::serial::Write;
+
+#[cfg(feature = "v2")]
+mod serial_setup;
+#[cfg(feature = "v2")]
+use serial_setup::UartePort;
 
 #[entry]
 fn main() -> ! {
@@ -34,17 +37,20 @@ fn main() -> ! {
 
     #[cfg(feature = "v1")]
     let mut serial = {
-        uart::Uart::new(
+        // Set up UART for microbit v1
+        let serial = uart::Uart::new(
             board.UART0,
             board.uart.into(),
             Parity::EXCLUDED,
             Baudrate::BAUD115200,
-        )
+        );
+        serial
     };
 
     #[cfg(feature = "v2")]
-    //  let mut serial = {
-        let mut serial = uarte::Uarte::new(
+    let mut serial = {
+        // Set up UARTE for microbit v2 using UartePort wrapper
+        let serial = uarte::Uarte::new(
             board.UARTE0,
             board.uart.into(),
             Parity::EXCLUDED,
@@ -55,11 +61,15 @@ fn main() -> ! {
     // static mut TX_BUF: [u8; 1] = [0; 1];
     static mut RX_BUF: [u8; 1] = [0; 1];
 
-    // nb::block!(serial.write(b'X')).unwrap();
-    
-    // for byte in b"The quick brown fox jumps over the lazy dog.\r\n".iter() {
-    //     nb::block!(serial.write(*byte)).unwrap();
-    // }
+    // Write a byte and flush
+    #[cfg(feature = "v1")]
+    serial.write(&[b'X']).unwrap(); // Adjusted for UART on v1, no need for nb::block!
+
+    #[cfg(feature = "v2")]
+    {
+        nb::block!(serial.write(b'X')).unwrap();
+        nb::block!(serial.flush()).unwrap();
+    }
 
     //write!(serial, "The quick brown fox jumps over the lazy dog.\r\n").unwrap();
 
