@@ -2,8 +2,10 @@
 #![no_std]
 
 use cortex_m_rt::entry;
+use core::fmt::Write as  _;
+use heapless::Vec;
 use panic_rtt_target as _;
-use rtt_target::rtt_init_print;
+use rtt_target::{rtt_init_print, rprintln};
 
 #[cfg(feature = "v1")]
 use microbit::{
@@ -24,6 +26,9 @@ use embedded_io::Write;
 
 #[cfg(feature = "v2")]
 use embedded_hal_nb::serial::Write;
+
+#[cfg(feature = "v2")]
+use embedded_hal_nb::serial::Read;
 
 #[cfg(feature = "v2")]
 mod serial_setup;
@@ -56,10 +61,8 @@ fn main() -> ! {
             Parity::EXCLUDED,
             Baudrate::BAUD115200,
         );
-        // UartePort::new(serial)
-    // };
-    // static mut TX_BUF: [u8; 1] = [0; 1];
-    static mut RX_BUF: [u8; 1] = [0; 1];
+        UartePort::new(serial)
+    };
 
     // Write a byte and flush
     #[cfg(feature = "v1")]
@@ -71,8 +74,7 @@ fn main() -> ! {
         nb::block!(serial.flush()).unwrap();
     }
 
-    //write!(serial, "The quick brown fox jumps over the lazy dog.\r\n").unwrap();
-
+    write!(serial, "The quick brown fox jumps over the lazy dog.\r\n").unwrap();
     //nb::block!(serial.flush()).unwrap();
 
     // A buffer with 32 bytes of capacity
@@ -92,17 +94,14 @@ fn main() -> ! {
         loop {
 
             // We assume that the receiving cannot fail
-            serial.read(unsafe {
-                &mut RX_BUF
-            }).unwrap();
-            let byte = unsafe{RX_BUF[0]};
+            let byte = nb::block!(serial.read()).unwrap();
             rprintln!("{}", byte as char);
             // rprintln!("{}", b'\n');
-            serial.write(unsafe{&mut RX_BUF}).unwrap();
-            // nb::block!(serial.flush()).unwrap();
+            nb::block!(serial.write(byte)).unwrap();
             // \r = 13, \n = 10
             if buffer.push(byte).is_err() {
                 write!(serial, "error: buffer full\r\n").unwrap();
+                // nb::block!(serial.flush()).unwrap();
                 break;
             }
 
@@ -110,14 +109,14 @@ fn main() -> ! {
                 //nb::block!(serial.write(b'\n')).unwrap();
                 write!(serial, "\nThe revers one is:\r\n").unwrap();
                 // nb::block!(serial.flush()).unwrap();
-                // for byte in buffer.iter().rev().chain(&[b'\n', b'\r']) {
-                //     nb::block!(serial.write(byte)).unwrap();
-                // }
-                buffer = buffer.iter().rev().chain(&[b'\n', b'\r']).map(|&x| x).collect();
-                serial.write(&buffer);
+                // buffer = buffer.iter().rev().chain(&[b'\n', b'\r']).map(|&x| x).collect();
+                // serial.write(&buffer);
+                for byte in buffer.iter().rev().chain(&[b'\n', b'\r']) {
+                    nb::block!(serial.write(*byte)).unwrap();
+                }
                 break;
             }
         }
-        // nb::block!(serial.flush()).unwrap()
+        nb::block!(serial.flush()).unwrap()
     }
 }
