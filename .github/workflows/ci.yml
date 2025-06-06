@@ -10,7 +10,7 @@ on:
 jobs:
   # Check build succeeds for each f3discovery chapter containing example code.
   build-f3discovery-chapter:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         chapter:
@@ -24,7 +24,7 @@ jobs:
           - 15-led-compass
           - 16-punch-o-meter
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -39,9 +39,9 @@ jobs:
 
   # Check build succeeds for f3discovery docs.
   build-f3discovery-doc:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -53,7 +53,7 @@ jobs:
 
   # Check a build succeeds for each microbit chapter that contains example code.
   build-microbit-chapter:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         chapter:
@@ -63,7 +63,7 @@ jobs:
           - 09-led-compass
           - 10-punch-o-meter
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -79,9 +79,9 @@ jobs:
 
   # Check build succeeds for microbit docs.
   build-microbit-doc:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -97,9 +97,9 @@ jobs:
 
   # Build the book HTML itself and optionally publish it.
   build-book:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -114,11 +114,13 @@ jobs:
         run: echo "~/.local/bin" >> $GITHUB_PATH
 
       - name: Cache Cargo installed binaries
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         id: cache-cargo
         with:
           path: ~/cargo-bin
-          key: cache-cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
       - name: Install mdbook
         if: steps.cache-cargo.outputs.cache-hit != 'true'
         uses: actions-rs/install@v0.1
