@@ -35,14 +35,17 @@ fn main() -> ! {
     rtt_init_print!();
     let board = microbit::Board::take().unwrap();
     
-    // let i2c = twim::Twim::new(
-    //     board.TWIM0, 
-    //     board.i2c_internal.into(),
-    //     FREQUENCY_A::K100,
-    // );
+    let i2c = twim::Twim::new(
+        board.TWIM0, 
+        board.i2c_internal.into(),
+        FREQUENCY_A::K100,
+    );
+
+    // i2c.disable();
+    let (twim0, _) = i2c.free();
 
     let i2c_e = twim::Twim::new(
-        board.TWIM0,
+        twim0,
         board.i2c_external.into(),
         FREQUENCY_A::K100,
     );
